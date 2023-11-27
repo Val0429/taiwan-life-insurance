@@ -1,0 +1,38 @@
+import "./../core/zenstack/base"
+
+import "./custom/models/auth/src/user/user"
+import "./test-val/test-val"
+import "./custom/models/property/property"
+
+datasource db {
+    provider = "sqlserver"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["views"]
+}
+
+generator markdown {
+    provider = "prisma-markdown"
+    output   = "./../packages/ERD.md"
+}
+
+plugin prisma {
+    provider = "@core/prisma"
+    output = "./generated/prisma/schema.prisma"
+    format = true
+}
+
+// plugin meta {
+//     provider = "@core/model-meta"
+// }
+
+// plugin zod {
+//     provider = "@core/zod"
+// }
+
+// plugin vnum {
+//     provider = "./../../../../../../core/zenstack/plugins/vnum"
+// }

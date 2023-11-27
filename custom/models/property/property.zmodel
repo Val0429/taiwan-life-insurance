@@ -1,0 +1,70 @@
+import "./../../../../core/zenstack/base"
+
+//----------------------------------
+// Property Group
+//----------------------------------
+/// 資產群組
+model PropertyGroup extends Base {
+    /// 資產群組名稱。例: 葉財記大樓
+    name String
+
+    properties Property[]
+
+    @@allow("all", true)
+}
+
+//----------------------------------
+// Property
+//----------------------------------
+/// 資產
+model Property extends Base {
+    /// 建物類別: Land / Building
+    type String
+    /// 建物地址。例: 台北市大安區通化段五小段492地號
+    address String
+    /// 建物面積(平方公尺)。例: 608.00
+    area Float
+    /// 取得年月日
+    acquireDate DateTime
+    /// 帳面金額
+    price Float
+
+    /// 屬於哪個資產群組
+    propertyGroupId String
+    propertyGroup PropertyGroup @relation(fields: [propertyGroupId], references: [id], onDelete: Cascade)
+
+    /// 擁有那些資產切分
+    propertySlices PropertySlice[]
+
+    @@allow("all", true)
+}
+
+//----------------------------------
+// PropertySlice
+//----------------------------------
+/// 資產切分。只有資產切分才可與用戶訂立合約
+model PropertySlice extends Base {
+    /// 建物類別，與父層相同: Land / Building
+    type String
+
+    /// 屬於哪個資產
+    propertyId String
+    property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+    contract PropertySliceContact?
+}
+
+//----------------------------------
+// PropertySliceContract
+//----------------------------------
+/// 資產出租合約
+model PropertySliceContact extends Base {
+    /// 哪個資產切分
+    propertySliceId String @unique
+    propertySlice PropertySlice @relation(fields: [propertySliceId], references: [id], onDelete: Cascade)
+
+    /// 屬於哪個用戶
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

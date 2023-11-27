@@ -1,0 +1,25 @@
+import "./../../../../../../core/zenstack/base"
+
+//----------------------------------
+// USER
+//----------------------------------
+model User extends Base {
+    /// 使用者名稱
+    username String @unique
+    /// 使用者密碼
+    password String
+    /// Admin (作業人員) / User (租客)
+    role String
+
+    /// 真實姓名或法人名稱
+    name String
+    /// Email通知消息時使用
+    email String?
+    /// 其他備註
+    description String?
+
+    /// 擁有資產出租合約
+    contracts PropertySliceContact[]
+
+    @@allow("all", true)
+}

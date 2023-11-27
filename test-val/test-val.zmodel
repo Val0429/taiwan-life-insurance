@@ -1,0 +1,37 @@
+import "./../../core/zenstack/base"
+
+//----------------------------------
+// TestVal
+//----------------------------------
+
+abstract model TestBase {
+    id String @id @default(uuid())
+
+    testvnum String
+}
+
+model TestVal extends TestBase {
+    // Model Declaration Here
+    name String
+    profile TestValProfile?
+    posts Post[]
+
+    @@allow("all", true)
+}
+
+model TestValProfile {
+    id String @id @default(uuid())
+
+    testVal TestVal @relation(fields: [testValId], references: [id])
+    testValId String @unique
+
+    @@allow("all", true)
+}
+
+model Post {
+    id String @id @default(uuid())
+    testVal TestVal @relation(fields: [testValId], references: [id])
+    testValId String
+
+    @@allow("all", true)
+}
