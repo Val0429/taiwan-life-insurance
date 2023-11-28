@@ -1,5 +1,8 @@
 import "./../../../../core/zenstack/base"
 
+///
+/// @namespace 資產管理作業
+///
 //----------------------------------
 // Property Group
 //----------------------------------
@@ -8,7 +11,11 @@ model PropertyGroup extends Base {
     /// 資產群組名稱。例: 葉財記大樓
     name String
 
+    /// 群組內關聯資產
     properties Property[]
+
+    /// 是否過審
+    reviewed Boolean
 
     @@allow("all", true)
 }
@@ -36,6 +43,9 @@ model Property extends Base {
     /// 擁有那些資產切分
     propertySlices PropertySlice[]
 
+    /// 是否過審
+    reviewed Boolean
+
     @@allow("all", true)
 }
 
@@ -51,20 +61,52 @@ model PropertySlice extends Base {
     propertyId String
     property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-    contract PropertySliceContact?
+    /// 簽訂的租用合約
+    contract PropertySliceContract?
+
+    /// 是否過審
+    reviewed Boolean
+}
+
+//----------------------------------
+// Customer
+//----------------------------------
+/// 租用資產客戶
+model Customer extends Base {
+    /// 客戶名稱
+    username String @unique
+    /// 客戶密碼
+    password String
+
+    /// 真實姓名或法人名稱
+    name String
+    /// Email通知消息時使用
+    email String?
+    /// 其他備註
+    description String?
+
+    /// 擁有資產出租合約
+    propertySliceContracts PropertySliceContract[]
+
+    @@allow("all", true)
 }
 
 //----------------------------------
 // PropertySliceContract
 //----------------------------------
 /// 資產出租合約
-model PropertySliceContact extends Base {
+model PropertySliceContract extends Base {
     /// 哪個資產切分
     propertySliceId String @unique
     propertySlice PropertySlice @relation(fields: [propertySliceId], references: [id], onDelete: Cascade)
 
-    /// 屬於哪個用戶
+    /// 屬於哪個租用客戶
     userId String
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    customer Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    /// 是否過審
+    reviewed Boolean
+
+    @@allow("all", true)
 }
 

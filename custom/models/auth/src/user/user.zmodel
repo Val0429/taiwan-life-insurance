@@ -3,13 +3,26 @@ import "./../../../../../../core/zenstack/base"
 //----------------------------------
 // USER
 //----------------------------------
+/// 管理台銀使用者帳號
+///
+/// 所有權限皆可修改自己的密碼
+/// Admin 可以新建/修改/刪除帳號，與提出修改密碼請求
+///
+/// @namespace 系統維護管理作業
 model User extends Base {
     /// 使用者名稱
     username String @unique
     /// 使用者密碼
     password String
-    /// Admin (作業人員) / User (租客)
-    role String
+    /// Admin (系統管理者) / Operator (作業人員) / Reviewer (審核人員)
+    role1 String
+    /// Admin (系統管理者) / Operator (作業人員) / Reviewer (審核人員)
+    role2 String?
+
+    /// 0x00000000. 資產管理作業 / 租賃管理作業 / 設施設備修繕採購作業 / 會計帳務管理作業 / 事務管理作業 / 決策支援及報表作業 / 系統維護管理作業
+    role1Permission Int?
+    /// 0x00000000. 資產管理作業 / 租賃管理作業 / 設施設備修繕採購作業 / 會計帳務管理作業 / 事務管理作業 / 決策支援及報表作業 / 系統維護管理作業
+    role2Permission Int?
 
     /// 真實姓名或法人名稱
     name String
@@ -18,8 +31,17 @@ model User extends Base {
     /// 其他備註
     description String?
 
-    /// 擁有資產出租合約
-    contracts PropertySliceContact[]
-
     @@allow("all", true)
+}
+
+model Logs {
+    Id Int @id @default(autoincrement())
+    Message String? @db.NVarChar(Max)
+    Level String? @db.NVarChar(Max)
+    TimeStamp DateTime? @db.DateTime
+    Exception String? @db.NVarChar(Max)
+    LogEvent String? @db.NVarChar(Max)
+    ServiceName String? @db.VarChar(200)
+    TenantId String? @db.UniqueIdentifier
+    CorrelationId String? @db.UniqueIdentifier
 }

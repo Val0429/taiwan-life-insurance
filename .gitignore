@@ -9,6 +9,7 @@ files
 
 # Tests
 generated/coverage
+generated/logs
 
 # IDEs and editors
 /.idea

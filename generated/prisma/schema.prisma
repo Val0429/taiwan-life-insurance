@@ -20,23 +20,12 @@ generator markdown {
 
 /// @@allow('all', true)
 model User {
-  id          String                 @id() @default(uuid())
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt()
-  /// 使用者名稱
-  username    String                 @unique()
-  /// 使用者密碼
-  password    String
-  /// Admin (作業人員) / User (租客)
-  role        String
-  /// 真實姓名或法人名稱
-  name        String
-  /// Email通知消息時使用
-  email       String?
-  /// 其他備註
-  description String?
-  /// 擁有資產出租合約
-  contracts   PropertySliceContact[]
+  id        String   @id() @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  username  String   @unique()
+  password  String
+  role      String?
 }
 
 /// @@allow('all', true)
@@ -60,64 +49,4 @@ model Post {
   id        String  @id() @default(uuid())
   testVal   TestVal @relation(fields: [testValId], references: [id])
   testValId String
-}
-
-/// @@allow('all', true)
-/// 資產群組
-model PropertyGroup {
-  id         String     @id() @default(uuid())
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt()
-  /// 資產群組名稱。例: 葉財記大樓
-  name       String
-  properties Property[]
-}
-
-/// @@allow('all', true)
-/// 資產
-model Property {
-  id              String          @id() @default(uuid())
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt()
-  /// 建物類別: Land / Building
-  type            String
-  /// 建物地址。例: 台北市大安區通化段五小段492地號
-  address         String
-  /// 建物面積(平方公尺)。例: 608.00
-  area            Float
-  /// 取得年月日
-  acquireDate     DateTime
-  /// 帳面金額
-  price           Float
-  /// 屬於哪個資產群組
-  propertyGroupId String
-  propertyGroup   PropertyGroup   @relation(fields: [propertyGroupId], references: [id], onDelete: Cascade)
-  /// 擁有那些資產切分
-  propertySlices  PropertySlice[]
-}
-
-/// 資產切分。只有資產切分才可與用戶訂立合約
-model PropertySlice {
-  id         String                @id() @default(uuid())
-  createdAt  DateTime              @default(now())
-  updatedAt  DateTime              @updatedAt()
-  /// 建物類別，與父層相同: Land / Building
-  type       String
-  /// 屬於哪個資產
-  propertyId String
-  property   Property              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  contract   PropertySliceContact?
-}
-
-/// 資產出租合約
-model PropertySliceContact {
-  id              String        @id() @default(uuid())
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt()
-  /// 哪個資產切分
-  propertySliceId String        @unique()
-  propertySlice   PropertySlice @relation(fields: [propertySliceId], references: [id], onDelete: Cascade)
-  /// 屬於哪個用戶
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

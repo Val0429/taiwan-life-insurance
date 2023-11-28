@@ -4,17 +4,20 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-11-20 03:53:15
+ * Last Modified: 2023-11-28 01:39:15
  * Modified By: Val Liu
  * -----
  */
 
 import { LoggerModule } from "nestjs-pino";
+import "core/utilities/load-env";
 
 const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
     pinoHttp: {
+        useLevel: "debug",
         transport: {
             targets: [
+                /// log into console
                 {
                     target: "pino-pretty",
                     level: String(process.env.LOG_LEVEL_CONSOLE),
@@ -22,6 +25,7 @@ const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
                         singleLine: true,
                     },
                 },
+                /// log into file
                 {
                     target: "pino/file",
                     level: String(process.env.LOG_LEVEL_FILE),
@@ -30,9 +34,57 @@ const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
                         mkdir: true,
                     },
                 },
+                /// log into mssql - only level > warn
+                {
+                    target: "@totalsoft/pino-mssqlserver",
+                    level: "warn",
+                    options: {
+                        serviceName: "TWBLI",
+                        tableName: "Logs",
+                        connectionString: sqlUrlToCString(
+                            process.env.DATABASE_URL as string,
+                        ),
+                    },
+                },
             ],
         },
     },
 };
 
 export { pinoSetup };
+
+function capitalize(value: string): string {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+/// translate SqlServer database url into connection string
+function sqlUrlToCString(databaseUrl: string) {
+    const segments = databaseUrl.split(";");
+
+    /// parse host and port
+    const seg1 = segments.shift();
+    if (!seg1) throw `database url error: ${databaseUrl}`;
+    const [_0, _1, host, port] = [...seg1.matchAll(/^(\w+)\:\/\/(\w+)\:(\d+)/gi)][0];
+
+    /// parse the rest into dictionary
+    const dict: any = segments.reduce((final, value) => {
+        const [k, v] = value.split("=");
+        final[k.toLowerCase()] = v;
+        return final;
+    }, {});
+    const user = dict.user;
+    delete dict.user;
+
+    /// concat the subString
+    const subString = Object.keys(dict)
+        .reduce((final, key) => {
+            final.push(`${capitalize(key)}=${dict[key]}`);
+            return final;
+        }, [] as string[])
+        .join(";");
+
+    // concat the connection string
+    const connectionString = `Server=${host},${port};User Id=${user};TrustServerCertificate=True;${subString};`;
+    console.log("final string?", connectionString);
+    return connectionString;
+}

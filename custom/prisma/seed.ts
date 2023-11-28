@@ -4,7 +4,7 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-11-27 10:39:19
+ * Last Modified: 2023-11-28 01:39:32
  * Modified By: Val Liu
  * -----
  */
@@ -21,7 +21,7 @@ async function main() {
         create: {
             username: "Admin",
             password: AESEncrypt("Az123567!"),
-            role: "Admin",
+            role1: "Admin",
             name: "預設管理者",
         },
     });
