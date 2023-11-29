@@ -7,17 +7,28 @@ import "./../../../../core/zenstack/base"
 // Property Group
 //----------------------------------
 /// 資產群組
+///
+/// 可作為受審核主體
 model PropertyGroup extends Base {
     /// 資產群組名稱。例: 葉財記大樓
     name String
 
+    /// 關聯欄位 ///
     /// 群組內關聯資產
     properties Property[]
 
-    /// 是否過審
-    reviewed Boolean
+    /// 所有物件通用 ///
+    /// 資料已被刪除、或審核完成
+    recycled Boolean
+    /// 是否為審核相關資料
+    auditee Boolean
 
-    @@allow("all", true)
+    /// 受審核主體專用 ///
+    /// 審核資料父層
+    auditParentId String? @unique
+    auditParent PropertyGroup? @relation("audit", fields: [auditParentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 審核資料子層
+    auditChild PropertyGroup? @relation("audit")
 }
 
 //----------------------------------
@@ -36,15 +47,23 @@ model Property extends Base {
     /// 帳面金額
     price Float
 
+    /// 地籍產權資料，如土地謄本、建物謄本、地籍圖、建物測量成果圖等
+    propertyRightsImages Files[] @relation("rel_propertyRightsImages")
+    // /// 建築執照及使用執照等資料，如執照存根、使照竣工圖等
+    // propertyUsageLicenseImages Files[] @relation("rel_propertyUsageLicenseImages")
+
+    /// 關聯欄位 ///
     /// 屬於哪個資產群組
     propertyGroupId String
     propertyGroup PropertyGroup @relation(fields: [propertyGroupId], references: [id], onDelete: Cascade)
-
     /// 擁有那些資產切分
     propertySlices PropertySlice[]
 
-    /// 是否過審
-    reviewed Boolean
+    /// 所有物件通用 ///
+    /// 資料已被刪除、或審核完成
+    recycled Boolean
+    /// 是否為審核相關資料
+    auditee Boolean
 
     @@allow("all", true)
 }
@@ -57,15 +76,18 @@ model PropertySlice extends Base {
     /// 建物類別，與父層相同: Land / Building
     type String
 
+    /// 關聯欄位 ///
     /// 屬於哪個資產
     propertyId String
     property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
     /// 簽訂的租用合約
     contract PropertySliceContract?
 
-    /// 是否過審
-    reviewed Boolean
+    /// 所有物件通用 ///
+    /// 資料已被刪除、或審核完成
+    recycled Boolean
+    /// 是否為審核相關資料
+    auditee Boolean
 }
 
 //----------------------------------
@@ -104,9 +126,5 @@ model PropertySliceContract extends Base {
     userId String
     customer Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    /// 是否過審
-    reviewed Boolean
-
     @@allow("all", true)
 }
-

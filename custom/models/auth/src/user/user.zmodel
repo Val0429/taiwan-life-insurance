@@ -35,13 +35,37 @@ model User extends Base {
 }
 
 model Logs {
-    Id Int @id @default(autoincrement())
-    Message String? @db.NVarChar(Max)
-    Level String? @db.NVarChar(Max)
-    TimeStamp DateTime? @db.DateTime
-    Exception String? @db.NVarChar(Max)
-    LogEvent String? @db.NVarChar(Max)
-    ServiceName String? @db.VarChar(200)
-    TenantId String? @db.UniqueIdentifier
-    CorrelationId String? @db.UniqueIdentifier
+    id Int @id @default(autoincrement())
+    message String? @db.NVarChar(Max)
+    level String? @db.NVarChar(Max)
+    timestamp DateTime? @db.DateTime
+    exception String? @db.NVarChar(Max)
+    log String? @db.NVarChar(Max)
+    service String? @db.VarChar(200)
+    module String? @db.VarChar(200)
+
+    userId String?
+    tenantId String?
+    relatedId String?
+}
+
+model Files extends Base {
+    fileName String
+    fileSize Int
+    contentType String
+    /// 檔案存放路徑
+    filePath String
+
+    /// 備註
+    description String?
+    /// 是否需要權限存取
+    isPublic Boolean?
+
+    // /// 關聯資料，回收處理使用 ///
+    // used Boolean
+
+    /// 關聯資料 ///
+    relatedId String?
+    propertyRightsImages Property? @relation("rel_propertyRightsImages", fields: [relatedId], references: [id], onDelete: Cascade)
+    // propertyUsageLicenseImages Property? @relation("rel_propertyUsageLicenseImages", fields: [relatedId], references: [id], onDelete: Cascade)
 }
