@@ -1,7 +1,6 @@
 import "./../core/zenstack/base"
 
 import "./custom/models/auth/src/user/user"
-import "./test-val/test-val"
 import "./custom/models/property/property"
 
 datasource db {

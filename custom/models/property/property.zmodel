@@ -9,21 +9,29 @@ import "./../../../../core/zenstack/base"
 /// 資產群組
 ///
 /// 可作為受審核主體
+/// 審核過程存入Logs
+/// 審核過程與紀錄
+/// 1: 提交審核: userId (提交人) / tenantId (PropertyGroupId) / relatedId
+/// 2: 接受或駁回審核: userId (提交人) / tenantId (PropertyGroupId) / relatedId (審核人) / message (接受或駁回訊息)
 model PropertyGroup extends Base {
     /// 資產群組名稱。例: 葉財記大樓
     name String
 
-    /// 關聯欄位 ///
+    /* 關聯欄位 */
     /// 群組內關聯資產
     properties Property[]
 
-    /// 所有物件通用 ///
+    /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean
     /// 是否為審核相關資料
     auditee Boolean
 
-    /// 受審核主體專用 ///
+    /* 受審核主體專用 */
+    /// 審核類別: 新增 / 修改 / 刪除
+    auditType String?
+    /// 描述修改內容: 用來提示審核員，我修改了什麼?
+    auditDescribe String?
     /// 審核資料父層
     auditParentId String? @unique
     auditParent PropertyGroup? @relation("audit", fields: [auditParentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
@@ -31,6 +39,9 @@ model PropertyGroup extends Base {
     auditChild PropertyGroup? @relation("audit")
 }
 
+///
+/// @namespace 資產管理作業
+///
 //----------------------------------
 // Property
 //----------------------------------
@@ -47,19 +58,35 @@ model Property extends Base {
     /// 帳面金額
     price Float
 
-    /// 地籍產權資料，如土地謄本、建物謄本、地籍圖、建物測量成果圖等
-    propertyRightsImages Files[] @relation("rel_propertyRightsImages")
-    // /// 建築執照及使用執照等資料，如執照存根、使照竣工圖等
-    // propertyUsageLicenseImages Files[] @relation("rel_propertyUsageLicenseImages")
+    /// MSSQL 不能使用 String[], 存入JSON Array File ID
+    /// 1. 地籍產權資料，如土地謄本、建物謄本、地籍圖、建物測量成果圖等
+    filesPropertyRights String?
+    /// 2. 建築執照及使用執照等資料，如執照存根、使照竣工圖等
+    filesPropertyUsageLicense String?
+    /// 4. 室內裝修相關圖說資料，如室內裝修合格證明、竣工圖說等
+    filesIndoorDecoration String?
+    /// 5. 相關資料如有書面文件均須有掃描檔案儲存功能
+    filesOther String?
 
-    /// 關聯欄位 ///
+    // 水、電、管理費、折舊攤提收支紀錄
+    incomeAndExpenseSubject IncomeAndExpenseSubject[]
+
+    /* 關聯欄位 */
     /// 屬於哪個資產群組
     propertyGroupId String
     propertyGroup PropertyGroup @relation(fields: [propertyGroupId], references: [id], onDelete: Cascade)
-    /// 擁有那些資產切分
-    propertySlices PropertySlice[]
+    /// 擁有那些資產設備
+    propertyEquipments PropertyEquipment[]
+    /// 擁有那些資產招租
+    propertyRentalUnits PropertyRentalUnit[]
+    /// 擁有那些維修申請
+    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest[]
+    /// 擁有那些保養紀錄
+    propertyEquipmentMaintanceRecord PropertyEquipmentMaintanceRecord[]
+    // /// 擁有那些折舊攤提紀錄
+    // propertyDepreciationRecord PropertyDepreciationRecord[]
 
-    /// 所有物件通用 ///
+    /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean
     /// 是否為審核相關資料
@@ -68,28 +95,158 @@ model Property extends Base {
     @@allow("all", true)
 }
 
+///
+/// @namespace 資產管理作業
+///
 //----------------------------------
-// PropertySlice
+// PropertyEquipment
 //----------------------------------
-/// 資產切分。只有資產切分才可與用戶訂立合約
-model PropertySlice extends Base {
-    /// 建物類別，與父層相同: Land / Building
-    type String
+/// 資產所屬設備
+model PropertyEquipment extends Base {
+    /// 設備編號
+    serial String
+    /// 設備名稱
+    name String
+    /// 詳細描述
+    description String
+    /// 取得年月日
+    acquireDate DateTime
+    /// 設備保養週期 Linux Crontab Syntax
+    maintainancePeriod String
 
-    /// 關聯欄位 ///
+    /// MSSQL 不能使用 String[], 存入JSON Array File ID
+    /// 5. 相關檔案資料
+    filesOther String?
+
+    /* 關聯欄位 */
     /// 屬於哪個資產
     propertyId String
-    property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-    /// 簽訂的租用合約
-    contract PropertySliceContract?
+    property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 屬於哪個資產招租
+    propertyRentalUnitId String?
+    propertyRentalUnit PropertyRentalUnit? @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
+    /// 屬於哪個維護廠商
+    propertyEquipmentMaintanceVendorId String
+    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id])
 
-    /// 所有物件通用 ///
+    /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean
     /// 是否為審核相關資料
     auditee Boolean
+
+    @@allow("all", true)
 }
 
+///
+/// @namespace 租賃管理作業
+///
+//----------------------------------
+// PropertyRentalUnit
+//----------------------------------
+/// 資產招租。只有資產招租才可與用戶訂立合約
+model PropertyRentalUnit extends Base {
+    /* 4. 空置面積招租資料，如招租地址、面積、連絡人及電話、擬租租金等 */
+    /// 招租地址
+    address String
+    /// 招租面積(平方公尺)。例: 608.00
+    area Float
+    /// 聯絡人姓名
+    contactName String
+    /// 聯絡人email
+    contactEmail String
+    /// 聯絡電話
+    contactPhone String
+    /// 聯絡手機
+    contactMobile String
+    /// 擬租租金。單位: 新台幣
+    rentalAmount Int
+
+    /// 5. 相關資料如有書面文件均須有掃描檔案儲存功能。
+    filesOther String?
+
+    /* 關聯欄位 */
+    /// 屬於哪個資產
+    propertyId String
+    property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+    /// 擁有哪些資產設備
+    propertyEquipments PropertyEquipment[]
+    /// 擁有哪個資產合約
+    propertyRentalContract PropertyRentalContract?
+
+    /* 所有物件通用 */
+    /// 資料已被刪除、或審核完成
+    recycled Boolean
+    /// 是否為審核相關資料
+    auditee Boolean
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 租賃管理作業
+///
+//----------------------------------
+// PropertyRentalContract
+//----------------------------------
+/// 資產出租合約。只有資產招租才可與用戶訂立出租合約
+/// (Fayu) 討論: 3. 租賃契約租期內維護，如租金調整、提前終止、契約內容變更、補充契約、申請租金減免等。
+model PropertyRentalContract extends Base {
+    /* 2. 租賃契約簽訂資料，如承租戶資料、租賃面積、租金、租期、免租金裝潢期、特約條款等。 */
+    /// 2. 租賃契約簽訂資料: 租戶姓名
+    tenantName String
+    /// 租戶email
+    tenantEmail String
+    /// 租戶電話
+    tenantPhone String
+    /// 租戶手機
+    tenantMobile String
+    /// 出租金額
+    monthlyRent Int
+    /// 總租期
+    rentalPeriod Int
+    /// 出租開始日期
+    rentalStartDate DateTime
+    /// 出租結束日期
+    rentalEndDate DateTime
+    /// 免租金裝潢期限
+    rentFreePeriod Int
+    /// 免租金裝潢截止日期
+    rentFreeEndDate DateTime
+    /// 特約條款
+    specialTerms String?
+
+    // 租金、押金、利息收支紀錄
+    incomeAndExpenseSubject IncomeAndExpenseSubject[]
+
+    // /// 租金支付紀錄
+    // rentalPayments RentalPayment[]
+
+    /// 1. 承租戶簽核資料，如簽呈及其附件等。
+    filesSignature String?
+
+    /* 關聯欄位 */
+    /// 屬於哪個資產招租
+    propertyRentalUnitId String @unique
+    propertyRentalUnit PropertyRentalUnit @relation(fields: [propertyRentalUnitId], references: [id], onDelete: Cascade)
+    /// 屬於哪個租戶
+    customerId String
+    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    // /// 擁有押金與利息紀錄
+    // rentalDepositAndInterestRecord RentalDepositAndInterestRecord[]
+
+    /* 所有物件通用 */
+    /// 資料已被刪除、或審核完成
+    recycled Boolean
+    /// 是否為審核相關資料
+    auditee Boolean
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 租賃管理作業
+///
 //----------------------------------
 // Customer
 //----------------------------------
@@ -108,23 +265,163 @@ model Customer extends Base {
     description String?
 
     /// 擁有資產出租合約
-    propertySliceContracts PropertySliceContract[]
+    propertyRentalContract PropertyRentalContract[]
+    /// 擁有維修申請
+    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest[]
 
     @@allow("all", true)
 }
 
-//----------------------------------
-// PropertySliceContract
-//----------------------------------
-/// 資產出租合約
-model PropertySliceContract extends Base {
-    /// 哪個資產切分
-    propertySliceId String @unique
-    propertySlice PropertySlice @relation(fields: [propertySliceId], references: [id], onDelete: Cascade)
 
-    /// 屬於哪個租用客戶
-    userId String
-    customer Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// PropertyEquipmentRepairRequest
+//----------------------------------
+/// 設備維修請求
+model PropertyEquipmentRepairRequest extends Base {
+    /// 申請日期
+    requestDate DateTime
+    /// 維修內容詳細描述
+    description String
+
+    /// 維修狀態: 待處理 派工維修 完工驗收 (?)
+    status String
+    /// 維修費用
+    cost Int
+
+    /// 屬於哪個資產
+    propertyId String
+    property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 屬於哪個租戶
+    customerId String
+    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
     @@allow("all", true)
 }
+
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// PropertyEquipmentMaintanceVendor
+//----------------------------------
+/// 設備維修請求
+model PropertyEquipmentMaintanceVendor extends Base {
+    /// 廠商統一編號
+    serialNumber String
+    /// 廠商名稱
+    name String
+    /// 廠商聯絡人
+    contactName String
+    /// 聯絡人email
+    contactEmail String
+    /// 聯絡電話
+    contactPhone String
+    /// 聯絡手機
+    contactMobile String
+    /// 廠商服務內容與詳細資料
+    description String
+
+    /// 負責保養設備
+    propertyEquipments PropertyEquipment[]
+    /// 擁有設備保養紀錄
+    propertyEquipmentMaintanceRecord PropertyEquipmentMaintanceRecord[]
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// PropertyEquipmentMaintanceRecord
+//----------------------------------
+/// 設備維修請求
+model PropertyEquipmentMaintanceRecord extends Base {
+    /// 預計維修日期
+    scheduledDate DateTime
+    /// 實際維修日期
+    maintainanceDate DateTime
+    /// 維修狀態: 完成 故障 (?)
+    status String
+
+    /// 屬於哪個資產
+    propertyId String
+    property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 屬於哪個廠商
+    propertyEquipmentMaintanceVendorId String
+    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+    @@allow("all", true)
+}
+
+// ///
+// /// @namespace 會計帳務管理作業
+// ///
+// //----------------------------------
+// // RentalPayment
+// //----------------------------------
+// /// 租金支付紀錄
+// model RentalPayment extends Base {
+//     /// 支付金額
+//     amount Int
+//     /// 支付日期
+//     paymentDate DateTime
+//     // 支付方式: 現金 支票 (轉帳?)
+//     paymentMethod String
+
+//     /// 屬於哪個資產出租合約
+//     propertyRentalContractId String
+//     propertyRentalContract PropertyRentalContract @relation(fields: [propertyRentalContractId], references: [id], onDelete: Cascade)
+
+//     @@allow("all", true)
+// }
+
+// ///
+// /// @namespace 會計帳務管理作業
+// ///
+// //----------------------------------
+// // RentalDepositAndInterestRecord
+// //----------------------------------
+// /// 押金與生息紀錄
+// model RentalDepositAndInterestRecord extends Base {
+//     /// 類別: 押金存入 / 產生利息 / 退還押金
+//     type String
+
+//     /// 異動金額
+//     amount Int
+//     /// 剩餘總金額
+//     totalAmount Int
+//     /// 支付日期
+//     paymentDate DateTime
+//     // 支付方式: 現金 支票 (轉帳?)
+//     paymentMethod String
+
+//     /// 屬於哪個資產出租合約
+//     propertyRentalContractId String
+//     propertyRentalContract PropertyRentalContract @relation(fields: [propertyRentalContractId], references: [id], onDelete: Cascade)
+
+//     @@allow("all", true)
+// }
+
+// ///
+// /// @namespace 會計帳務管理作業
+// ///
+// //----------------------------------
+// // PropertyDepreciationRecord
+// //----------------------------------
+// /// 資產折舊攤提紀錄
+// model PropertyDepreciationRecord extends Base {
+//     /// 折舊攤提金額
+//     amount Int
+//     /// 發生日期
+//     occurrenceDate DateTime
+
+//     /// 屬於哪個資產
+//     propertyId String
+//     property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+//     @@allow("all", true)
+// }

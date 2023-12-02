@@ -4,7 +4,7 @@
  * Author: Val Liu (valuis0429@gmail.com)
  *
  * -----
- * Last Modified: 2023-11-28 01:38:47
+ * Last Modified: 2023-12-02 08:13:20
  * Modified By: Val Liu
  * -----
  */
@@ -31,7 +31,6 @@ import { JwtAuthGuard } from "@app/auth/guards/jwt-auth.guard";
 import { RoleGuard } from "@app/auth/guards/role.guard";
 
 /// custom modules
-import { TestValModule } from "./test-val/test-val.module";
 import { PropertyModule } from "./custom/models/property/property.module";
 
 @Module({
@@ -47,7 +46,6 @@ import { PropertyModule } from "./custom/models/property/property.module";
         /// Custom Modules
         UserModule,
         AuthModule,
-        TestValModule,
         PropertyModule,
     ],
     controllers: [AppController],
