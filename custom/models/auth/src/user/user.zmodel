@@ -51,7 +51,7 @@ model Logs {
     level String @db.NVarChar(Max)
     log String @db.NVarChar(Max)
     service String @db.VarChar(200)
-    module String @db.VarChar(200)
+    module String? @db.VarChar(200)
     message String? @db.NVarChar(Max)
     exception String? @db.NVarChar(Max)
 
@@ -89,13 +89,13 @@ model Files extends Base {
     propertyId String?
     property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
     propertyEquipmentId String?
-    propertyEquipment PropertyEquipment @relation(fields: [propertyEquipmentId], references: [id], onDelete: SetNull)
+    propertyEquipment PropertyEquipment? @relation(fields: [propertyEquipmentId], references: [id], onDelete: SetNull)
     propertyRentalUnitId String?
-    propertyRentalUnit PropertyRentalUnit @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
+    propertyRentalUnit PropertyRentalUnit? @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
     propertyRentalContractId String?
-    propertyRentalContract PropertyRentalContract? @relation(fields: [propertyRentalContractId], references: [id])
+    propertyRentalContract PropertyRentalContract? @relation(fields: [propertyRentalContractId], references: [id], onDelete: SetNull)
     propertyEquipmentMaintanceDetailId String?
-    propertyEquipmentMaintanceDetail PropertyEquipmentMaintanceDetail? @relation(fields: [propertyEquipmentMaintanceDetailId], references: [id])
+    propertyEquipmentMaintanceDetail PropertyEquipmentMaintanceDetail? @relation(fields: [propertyEquipmentMaintanceDetailId], references: [id], onDelete: SetNull)
 
     @@allow("all", true)
 }
@@ -169,7 +169,7 @@ model IncomeAndExpenseCategory extends Base {
 model IncomeAndExpenseSubject extends Base {
     /// 關連到哪一個 收支項目類別
     categoryId String
-    category IncomeAndExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    category IncomeAndExpenseCategory @relation(fields: [categoryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 額外詳細說明
     description String?
     /// 覆蓋循環週期。格式: Linux Crontab Syntax
@@ -188,7 +188,7 @@ model IncomeAndExpenseSubject extends Base {
     propertyRentalContract PropertyRentalContract @relation(fields: [propertyRentalContractId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 屬於哪個設備維修請求
     propertyEquipmentRepairRequestId String
-    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest @relation(fields: [propertyEquipmentRepairRequestId], references: [id])
+    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest @relation(fields: [propertyEquipmentRepairRequestId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     @@allow("all", true)
 }
@@ -215,7 +215,7 @@ model IncomeAndExpenseDetail extends Base {
 
     /// 屬於哪個收支項目主體
     incomeAndExpenseSubjectId String
-    incomeAndExpenseSubject IncomeAndExpenseSubject @relation(fields: [incomeAndExpenseSubjectId], references: [id], onDelete: Cascade)
+    incomeAndExpenseSubject IncomeAndExpenseSubject @relation(fields: [incomeAndExpenseSubjectId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     @@allow("all", true)
 }
@@ -239,7 +239,7 @@ model PropertyEquipmentMaintanceSubject extends Base {
     propertyEquipment PropertyEquipment?
     /// 屬於哪個維護廠商
     propertyEquipmentMaintanceVendorId String
-    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id])
+    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     @@allow("all", true)
 }
@@ -264,7 +264,7 @@ model PropertyEquipmentMaintanceDetail extends Base {
 
     /// 屬於哪個設備定期保養主體
     propertyEquipmentMaintanceSubjectId String
-    propertyEquipmentMaintanceSubject PropertyEquipmentMaintanceSubject @relation(fields: [propertyEquipmentMaintanceSubjectId], references: [id])
+    propertyEquipmentMaintanceSubject PropertyEquipmentMaintanceSubject @relation(fields: [propertyEquipmentMaintanceSubjectId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     @@allow("all", true)
 }

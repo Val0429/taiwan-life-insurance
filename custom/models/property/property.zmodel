@@ -85,7 +85,7 @@ model Property extends Base {
     /* 關聯欄位 */
     /// 屬於哪個資產群組
     propertyGroupId String
-    propertyGroup PropertyGroup @relation(fields: [propertyGroupId], references: [id], onDelete: Cascade)
+    propertyGroup PropertyGroup @relation(fields: [propertyGroupId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 擁有哪些資產設備
     propertyEquipments PropertyEquipment[]
     /// 擁有哪些資產空間
@@ -135,7 +135,7 @@ model PropertyEquipment extends Base {
     property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 屬於哪個資產空間
     propertyRentalUnitId String?
-    propertyRentalUnit PropertyRentalUnit? @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
+    propertyRentalUnit PropertyRentalUnit? @relation(fields: [propertyRentalUnitId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 擁有哪些設備維修請求
     propertyEquipmentRepairRequest PropertyEquipmentRepairRequest[]
 
@@ -185,7 +185,7 @@ model PropertyRentalUnit extends Base {
     /* 關聯欄位 */
     /// 屬於哪個資產
     propertyId String
-    property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+    property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 擁有哪些資產設備
     propertyEquipments PropertyEquipment[]
     /// 擁有哪個資產合約
@@ -240,10 +240,10 @@ model PropertyRentalContract extends Base {
     /* 關聯欄位 */
     /// 屬於哪個資產空間
     propertyRentalUnitId String @unique
-    propertyRentalUnit PropertyRentalUnit @relation(fields: [propertyRentalUnitId], references: [id], onDelete: Cascade)
+    propertyRentalUnit PropertyRentalUnit @relation(fields: [propertyRentalUnitId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 屬於哪個租戶
     customerId String
-    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    customer Customer @relation(fields: [customerId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
@@ -320,7 +320,7 @@ model PropertyEquipmentRepairRequest extends Base {
     propertyEquipment PropertyEquipment @relation(fields: [propertyEquipmentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     /// 屬於哪個租戶
     customerId String
-    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    customer Customer @relation(fields: [customerId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
@@ -384,7 +384,7 @@ model PropertyEquipmentPartsInventory extends Base {
     /* 關聯資料 */
     /// 屬於哪個資產
     propertyId String?
-    property Property? @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: SetNull)
+    property Property? @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成

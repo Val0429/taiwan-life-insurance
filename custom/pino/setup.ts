@@ -4,7 +4,7 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-12-04 10:14:30
+ * Last Modified: 2023-12-04 12:54:02
  * Modified By: Val Liu
  * -----
  */
@@ -38,7 +38,7 @@ const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
                 /// additional param: module, action, err
                 /// userId, auditerId, relatedId
                 {
-                    target: "@valuis0429/pino-mssqlserver",
+                    target: require.resolve("@valuis0429/pino-mssqlserver"),
                     level: String(process.env.LOG_LEVEL_MSSQL),
                     options: {
                         serviceName: "TWBLI",
