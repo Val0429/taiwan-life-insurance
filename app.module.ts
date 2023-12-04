@@ -4,7 +4,7 @@
  * Author: Val Liu (valuis0429@gmail.com)
  *
  * -----
- * Last Modified: 2023-12-04 09:42:34
+ * Last Modified: 2023-12-04 01:41:20
  * Modified By: Val Liu
  * -----
  */
@@ -26,7 +26,7 @@ import { pinoSetup } from "./custom/pino/setup";
 //import { RestfulDefaultTypeMiddleware } from "core/middlewares/restful-default-type.middleware";
 
 /// change this only if custom auth changes the guards. (not likely)
-import { UserModule, AuthModule } from "./custom/models/auth/src";
+import { UserModule, AuthModule } from "@app/auth";
 import { JwtAuthGuard } from "@app/auth/guards/jwt-auth.guard";
 import { RoleGuard } from "@app/auth/guards/role.guard";
 
@@ -51,11 +51,11 @@ import { PropertyModule } from "./custom/models/property/property.module";
     controllers: [AppController],
     providers: [
         AppService,
+        { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },
         { provide: APP_FILTER, useClass: GenericErrorFilter },
         { provide: APP_FILTER, useClass: TypiaTypeErrorFilter },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
         { provide: APP_GUARD, useClass: RoleGuard },
-        { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },
     ],
 })
 export class AppModule {

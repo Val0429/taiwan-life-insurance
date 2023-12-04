@@ -4,17 +4,20 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-12-04 12:54:02
+ * Last Modified: 2023-12-04 02:10:05
  * Modified By: Val Liu
  * -----
  */
 
 import { LoggerModule } from "nestjs-pino";
+import * as pino from "pino";
 import "core/utilities/load-env";
 
 const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
     pinoHttp: {
+        level: "trace",
         useLevel: "debug",
+        timestamp: pino.stdTimeFunctions.isoTime,
         transport: {
             targets: [
                 /// log into console
