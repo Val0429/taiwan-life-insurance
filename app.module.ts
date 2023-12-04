@@ -4,7 +4,7 @@
  * Author: Val Liu (valuis0429@gmail.com)
  *
  * -----
- * Last Modified: 2023-12-02 08:13:20
+ * Last Modified: 2023-12-04 09:42:34
  * Modified By: Val Liu
  * -----
  */
@@ -36,7 +36,7 @@ import { PropertyModule } from "./custom/models/property/property.module";
 @Module({
     imports: [
         /// Core Modules
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({ isGlobal: true, envFilePath: [".env", "src/.env"] }),
         LoggerModule.forRoot(pinoSetup),
         AppHostModule,
         ClsModule.forRoot({ global: true, middleware: { mount: true } }),

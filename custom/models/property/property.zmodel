@@ -14,6 +14,11 @@ import "./../../../../core/zenstack/base"
 /// 1: 提交審核: userId (提交人) / tenantId (PropertyGroupId) / relatedId
 /// 2: 接受或駁回審核: userId (提交人) / tenantId (PropertyGroupId) / relatedId (審核人) / message (接受或駁回訊息)
 model PropertyGroup extends Base {
+    /// 資產群組類別: 投資用 (Investment) 自用 (Own)
+    type String
+    /// 資產狀態: 持有中 (Holding) 已售出 (Sold)
+    status String @default("Holding")
+
     /// 資產群組名稱。例: 葉財記大樓
     name String
 
@@ -24,6 +29,8 @@ model PropertyGroup extends Base {
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean @default(false)
+
+    /* 審核flag */
     /// 是否為審核相關資料
     auditee Boolean
 
@@ -47,7 +54,7 @@ model PropertyGroup extends Base {
 //----------------------------------
 /// 資產
 model Property extends Base {
-    /// 資產狀態: 持有中 (Holding) 已售出 (Sold)
+    /// 資產狀態: 持有中 (Holding) 已售出 (Complete)
     status String @default("Holding")
 
     /// 建物類別: Land / Building
@@ -60,6 +67,10 @@ model Property extends Base {
     acquireDate DateTime
     /// 帳面金額
     amount Int
+    /// Building: 折舊率
+    depreciationRate Float?
+    /// Building: 折舊年限。單位: 年
+    depreciationLife Float?
 
     /// MSSQL 不能使用 String[], 存入JSON Array File ID
     /// 1. (PropertyRights) 地籍產權資料，如土地謄本、建物謄本、地籍圖、建物測量成果圖等
@@ -79,14 +90,14 @@ model Property extends Base {
     propertyEquipments PropertyEquipment[]
     /// 擁有哪些資產空間
     propertyRentalUnits PropertyRentalUnit[]
-    /// 擁有哪些保養紀錄
-    propertyEquipmentMaintanceRecord PropertyEquipmentMaintanceRecord[]
     /// 擁有哪些零件庫存
     propertyEquipmentPartsInventory PropertyEquipmentPartsInventory[]
 
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean @default(false)
+
+    /* 審核flag */
     /// 是否為審核相關資料
     auditee Boolean
 
@@ -109,8 +120,10 @@ model PropertyEquipment extends Base {
     description String
     /// 取得年月日
     acquireDate DateTime
-    /// 設備保養週期 Linux Crontab Syntax
-    maintainancePeriod String
+
+    /// 設備保養主體
+    propertyEquipmentMaintanceSubjectId String @unique
+    propertyEquipmentMaintanceSubject PropertyEquipmentMaintanceSubject @relation(fields: [propertyEquipmentMaintanceSubjectId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
     /// MSSQL 不能使用 String[], 存入JSON Array File ID
     /// 5. 相關檔案資料
@@ -123,16 +136,16 @@ model PropertyEquipment extends Base {
     /// 屬於哪個資產空間
     propertyRentalUnitId String?
     propertyRentalUnit PropertyRentalUnit? @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
-    /// 屬於哪個維護廠商
-    propertyEquipmentMaintanceVendorId String
-    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id])
+    /// 擁有哪些設備維修請求
+    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest[]
 
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean @default(false)
+
+    /* 審核flag */
     /// 是否為審核相關資料
     auditee Boolean
-    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest[]
 
     @@allow("all", true)
 }
@@ -181,6 +194,8 @@ model PropertyRentalUnit extends Base {
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean @default(false)
+
+    /* 審核flag */
     /// 是否為審核相關資料
     auditee Boolean
 
@@ -233,6 +248,8 @@ model PropertyRentalContract extends Base {
     /* 所有物件通用 */
     /// 資料已被刪除、或審核完成
     recycled Boolean @default(false)
+
+    /* 審核flag */
     /// 是否為審核相關資料
     auditee Boolean
 
@@ -268,6 +285,14 @@ model Customer extends Base {
     /// 擁有維修申請
     propertyEquipmentRepairRequest PropertyEquipmentRepairRequest[]
 
+    /* 所有物件通用 */
+    /// 資料已被刪除、或審核完成
+    recycled Boolean @default(false)
+
+    /* 審核flag */
+    /// 是否為審核相關資料
+    auditee Boolean
+
     @@allow("all", true)
 }
 
@@ -297,6 +322,10 @@ model PropertyEquipmentRepairRequest extends Base {
     customerId String
     customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
+    /* 所有物件通用 */
+    /// 資料已被刪除、或審核完成
+    recycled Boolean @default(false)
+
     @@allow("all", true)
 }
 
@@ -306,7 +335,7 @@ model PropertyEquipmentRepairRequest extends Base {
 //----------------------------------
 // PropertyEquipmentMaintanceVendor
 //----------------------------------
-/// 設備維修廠商
+/// 設備定期保養廠商
 model PropertyEquipmentMaintanceVendor extends Base {
     /// 廠商統一編號
     serialNumber String
@@ -323,35 +352,16 @@ model PropertyEquipmentMaintanceVendor extends Base {
     /// 廠商服務內容與詳細資料
     description String
 
-    /// 負責保養設備
-    propertyEquipments PropertyEquipment[]
-    /// 擁有設備保養紀錄
-    propertyEquipmentMaintanceRecord PropertyEquipmentMaintanceRecord[]
+    /// 負責設備保養主體
+    propertyEquipmentMaintanceSubject PropertyEquipmentMaintanceSubject[]
 
-    @@allow("all", true)
-}
+    /* 所有物件通用 */
+    /// 資料已被刪除、或審核完成
+    recycled Boolean @default(false)
 
-///
-/// @namespace 設施設備修繕採購作業
-///
-//----------------------------------
-// PropertyEquipmentMaintanceRecord
-//----------------------------------
-/// 設備定期保養
-model PropertyEquipmentMaintanceRecord extends Base {
-    /// 預計維修日期
-    scheduledDate DateTime
-    /// 實際維修日期
-    maintainanceDate DateTime
-    /// 維修狀態: 完成 故障 (?)
-    status String
-
-    /// 屬於哪個資產
-    propertyId String
-    property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-    /// 屬於哪個廠商
-    propertyEquipmentMaintanceVendorId String
-    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /* 審核flag */
+    /// 是否為審核相關資料
+    auditee Boolean
 
     @@allow("all", true)
 }
@@ -375,6 +385,14 @@ model PropertyEquipmentPartsInventory extends Base {
     /// 屬於哪個資產
     propertyId String?
     property Property? @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: SetNull)
+
+    /* 所有物件通用 */
+    /// 資料已被刪除、或審核完成
+    recycled Boolean @default(false)
+
+    /* 審核flag */
+    /// 是否為審核相關資料
+    auditee Boolean
 
     @@allow("all", true)
 }

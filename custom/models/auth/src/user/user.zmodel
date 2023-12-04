@@ -94,6 +94,8 @@ model Files extends Base {
     propertyRentalUnit PropertyRentalUnit @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
     propertyRentalContractId String?
     propertyRentalContract PropertyRentalContract? @relation(fields: [propertyRentalContractId], references: [id])
+    propertyEquipmentMaintanceDetailId String?
+    propertyEquipmentMaintanceDetail PropertyEquipmentMaintanceDetail? @relation(fields: [propertyEquipmentMaintanceDetailId], references: [id])
 
     @@allow("all", true)
 }
@@ -163,7 +165,7 @@ model IncomeAndExpenseCategory extends Base {
 //----------------------------------
 // 收支項目主體
 //----------------------------------
-/// 在資產或出租合約中，實際代表可收支項目
+/// 在資產或出租合約中，實際代表可收支項目，可執行的主體
 model IncomeAndExpenseSubject extends Base {
     /// 關連到哪一個 收支項目類別
     categoryId String
@@ -172,6 +174,8 @@ model IncomeAndExpenseSubject extends Base {
     description String?
     /// 覆蓋循環週期。格式: Linux Crontab Syntax
     loopPeriod String?
+    /// 循環年限
+    loopLife Float?
 
     /// 擁有那些收支明細
     incomeAndExpenseDetail IncomeAndExpenseDetail[]
@@ -202,7 +206,7 @@ model IncomeAndExpenseDetail extends Base {
     /// 額外詳細說明
     description String?
     /// 實際繳納日期
-    paymentDate DateTime?
+    executionDate DateTime?
     /// 單據掃描檔
     files Files[]
 
@@ -212,6 +216,55 @@ model IncomeAndExpenseDetail extends Base {
     /// 屬於哪個收支項目主體
     incomeAndExpenseSubjectId String
     incomeAndExpenseSubject IncomeAndExpenseSubject @relation(fields: [incomeAndExpenseSubjectId], references: [id], onDelete: Cascade)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// 設備定期保養主體
+//----------------------------------
+/// 在設備中，實際代表定期保養項目，可執行的主體
+model PropertyEquipmentMaintanceSubject extends Base {
+    /// 循環週期。格式: Linux Crontab Syntax
+    loopPeriod String?
+    /// 額外保養詳細內容
+    description String?
+
+    /// 擁有哪些保養明細
+    propertyEquipmentMaintanceDetail PropertyEquipmentMaintanceDetail[]
+    /// 屬於哪項設備
+    propertyEquipment PropertyEquipment?
+    /// 屬於哪個維護廠商
+    propertyEquipmentMaintanceVendorId String
+    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id])
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// 設備定期保養明細
+//----------------------------------
+/// 代表一期定期保養
+model PropertyEquipmentMaintanceDetail extends Base {
+    /// 額外詳細說明
+    description String?
+    /// 實際執行日期
+    executionDate DateTime?
+    /// 保養紀錄單
+    files Files[]
+
+    /// 自動建立後，即進入待處理狀態。直至填寫完畢
+    isPending Boolean
+
+    /// 屬於哪個設備定期保養主體
+    propertyEquipmentMaintanceSubjectId String
+    propertyEquipmentMaintanceSubject PropertyEquipmentMaintanceSubject @relation(fields: [propertyEquipmentMaintanceSubjectId], references: [id])
 
     @@allow("all", true)
 }

@@ -4,7 +4,7 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-11-28 01:39:15
+ * Last Modified: 2023-12-04 10:14:30
  * Modified By: Val Liu
  * -----
  */
@@ -35,9 +35,11 @@ const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
                     },
                 },
                 /// log into mssql - only level > warn
+                /// additional param: module, action, err
+                /// userId, auditerId, relatedId
                 {
-                    target: "@totalsoft/pino-mssqlserver",
-                    level: "warn",
+                    target: "@valuis0429/pino-mssqlserver",
+                    level: String(process.env.LOG_LEVEL_MSSQL),
                     options: {
                         serviceName: "TWBLI",
                         tableName: "Logs",
@@ -85,6 +87,5 @@ function sqlUrlToCString(databaseUrl: string) {
 
     // concat the connection string
     const connectionString = `Server=${host},${port};User Id=${user};TrustServerCertificate=True;${subString};`;
-    console.log("final string?", connectionString);
     return connectionString;
 }
