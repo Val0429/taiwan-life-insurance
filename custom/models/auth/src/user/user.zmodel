@@ -10,6 +10,7 @@ import "./../../../../../../core/zenstack/base"
 ///
 /// 所有權限皆可修改自己的密碼
 /// Admin 可以新建/修改/刪除帳號，與提出修改密碼請求
+/// 可以刪除與停用。所有資料表惟有User可刪除
 model User extends Base {
     /// 使用者名稱
     username String @unique
@@ -31,6 +32,9 @@ model User extends Base {
     email String?
     /// 其他備註
     description String?
+
+    /// 是否停用
+    recycled Boolean @default(false)
 
     @@allow("all", true)
 }
@@ -80,7 +84,16 @@ model Files extends Base {
     isPublic Boolean?
 
     /// 關聯資料，回收處理使用 ///
-    used Boolean
+    incomeAndExpenseDetailId String?
+    incomeAndExpenseDetail IncomeAndExpenseDetail? @relation(fields: [incomeAndExpenseDetailId], references: [id], onDelete: SetNull)
+    propertyId String?
+    property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+    propertyEquipmentId String?
+    propertyEquipment PropertyEquipment @relation(fields: [propertyEquipmentId], references: [id], onDelete: SetNull)
+    propertyRentalUnitId String?
+    propertyRentalUnit PropertyRentalUnit @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
+    propertyRentalContractId String?
+    propertyRentalContract PropertyRentalContract? @relation(fields: [propertyRentalContractId], references: [id])
 
     @@allow("all", true)
 }
@@ -97,7 +110,7 @@ model Files extends Base {
 //
 // - 主體: 租戶/出租合約
 //   押金 (單次)
-//   押金稅額 (?)
+//   利息稅額 (?)
 //   押金生息 `(0 0 1 * *)`
 //   違約金 (單次)
 //   退還押金 (單次)
@@ -110,15 +123,18 @@ model Files extends Base {
 //   營業稅 `(0 0 1 * *)`
 //   地價稅 `(0 0 11 * *)`
 //   房屋稅 `(0 0 5 * *)`
-//   行政規費 (?)
 //   管理費 `(0 0 1 * *)`
+//   委託調查研究費 (單次) (Opt)
+//
+// - 主體: 設備
+//   維修費用 (單次)
+//   保養費用 `(0 0 1 * *)`
+//   採購費 (單次) (Optional)
 //
 // - 主體: ?
-//   修繕費 (單次)
-//   設備零件採購費 (單次)
-//   委託調查研究費 (單次?)
+//   v設備零件採購費 (單次)
 //
-// 自訂: 外包費用，火險費，公證費
+// 自訂: 外包費用，火險費，公證費，行政規費
 model IncomeAndExpenseCategory extends Base {
     /// 收入 (Income) 或支出 (Expense)
     type String
@@ -129,14 +145,14 @@ model IncomeAndExpenseCategory extends Base {
     /// 循環週期。格式: Linux Crontab Syntax
     loopPeriod String?
 
-    /// 是否為出廠預設類別
-    isDefault Boolean
+    /// 是否為出廠預設類別。預設則不可刪除
+    isDefault Boolean @default(false)
 
     /// 擁有那些主體
     incomeAndExpenseSubject IncomeAndExpenseSubject[]
 
     /// 是否回收 (D)
-    recycled Boolean
+    recycled Boolean @default(false)
 
     @@allow("all", true)
 }
@@ -166,6 +182,9 @@ model IncomeAndExpenseSubject extends Base {
     /// 屬於哪個資產出租合約
     propertyRentalContractId String
     propertyRentalContract PropertyRentalContract @relation(fields: [propertyRentalContractId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 屬於哪個設備維修請求
+    propertyEquipmentRepairRequestId String
+    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest @relation(fields: [propertyEquipmentRepairRequestId], references: [id])
 
     @@allow("all", true)
 }
@@ -182,6 +201,10 @@ model IncomeAndExpenseDetail extends Base {
     amount Int
     /// 額外詳細說明
     description String?
+    /// 實際繳納日期
+    paymentDate DateTime?
+    /// 單據掃描檔
+    files Files[]
 
     /// 自動建立後，即進入待處理狀態。直至填寫完畢
     isPending Boolean
