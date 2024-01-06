@@ -1,17 +1,18 @@
 {
-  "name": "taiwan-bank-life-insurance",
-  "version": "1.0.0",
-  "description": "",
-  "main": "main.ts",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@valuis0429/pino-mssqlserver": "^1.1.6"
-  }
+    "name": "taiwan-bank-life-insurance",
+    "version": "1.0.0",
+    "description": "臺銀人壽保險股份有限公司<BR>不動產物業管理系統",
+    "copyright": "臺銀人壽版權所有 BankTaiwan Life Insurance Co., Ltd.All Rights Reserved.",
+    "main": "main.ts",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@valuis0429/pino-mssqlserver": "^1.1.9"
+    }
 }

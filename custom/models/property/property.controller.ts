@@ -4,7 +4,7 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-11-20 04:12:39
+ * Last Modified: 2023-12-09 02:33:57
  * Modified By: Val Liu
  * -----
  */
@@ -25,7 +25,10 @@ import {
     IUpdatePropertyDto,
     IUpdatePropertyOutput,
 } from "./entities/property.entity";
+import { PublicGate } from "@app/auth/guards/public.gate";
+import { RoleGate } from "@app/auth/guards/role.gate";
 
+@PublicGate()
 @Controller("property")
 export class PropertyController {
     private readonly logger = new Logger(PropertyController.name);
@@ -36,7 +39,9 @@ export class PropertyController {
     ) {}
 
     @TypedRoute.Post()
-    create(@TypedBody() createPropertyDto: ICreatePropertyDto): Promise<ICreatePropertyOutput> {
+    create(
+        @TypedBody() createPropertyDto: ICreatePropertyDto,
+    ): Promise<ICreatePropertyOutput> {
         return DtoToOutput("POST", createPropertyDto, this.propertyService);
     }
 
@@ -46,12 +51,16 @@ export class PropertyController {
     }
 
     @TypedRoute.Put()
-    update(@TypedBody() updatePropertyDto: IUpdatePropertyDto): Promise<IUpdatePropertyOutput> {
+    update(
+        @TypedBody() updatePropertyDto: IUpdatePropertyDto,
+    ): Promise<IUpdatePropertyOutput> {
         return DtoToOutput("PUT", updatePropertyDto, this.propertyService);
     }
 
     @TypedRoute.Delete()
-    delete(@TypedBody() deletePropertyDto: IDeletePropertyDto): Promise<IDeletePropertyOutput> {
+    delete(
+        @TypedBody() deletePropertyDto: IDeletePropertyDto,
+    ): Promise<IDeletePropertyOutput> {
         return DtoToOutput("DELETE", deletePropertyDto, this.propertyService);
     }
 }

@@ -4,7 +4,7 @@
  * Author: Val Liu (valuis0429@gmail.com)
  *
  * -----
- * Last Modified: 2023-12-04 01:41:20
+ * Last Modified: 2023-12-09 09:53:53
  * Modified By: Val Liu
  * -----
  */
@@ -41,7 +41,7 @@ import { PropertyModule } from "./custom/models/property/property.module";
         AppHostModule,
         ClsModule.forRoot({ global: true, middleware: { mount: true } }),
         PrismaModule,
-        SwaggerModule,
+        // SwaggerModule,
 
         /// Custom Modules
         UserModule,
@@ -51,6 +51,7 @@ import { PropertyModule } from "./custom/models/property/property.module";
     controllers: [AppController],
     providers: [
         AppService,
+        /// intercept error thrown by controller and do log
         { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },
         { provide: APP_FILTER, useClass: GenericErrorFilter },
         { provide: APP_FILTER, useClass: TypiaTypeErrorFilter },

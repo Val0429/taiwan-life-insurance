@@ -1,0 +1,275 @@
+import "./../../../../../../core/zenstack/base"
+
+///
+/// @namespace 系統維護管理作業
+///
+//----------------------------------
+// User
+//----------------------------------
+/// 管理台銀使用者帳號
+///
+/// 所有權限皆可修改自己的密碼
+/// Admin 可以新建/修改/刪除帳號，與提出修改密碼請求
+/// 可以刪除與停用。所有資料表惟有User可刪除
+model User extends Base {
+    /// 使用者名稱
+    username String @unique
+    /// 使用者密碼
+    password String
+    /// Admin (系統管理者) / Operator (作業人員) / Reviewer (審核人員)
+    role1 String
+    /// Admin (系統管理者) / Operator (作業人員) / Reviewer (審核人員)
+    role2 String?
+
+    /// 0x00000000. 資產管理作業 / 租賃管理作業 / 設施設備修繕採購作業 / 會計帳務管理作業 / 事務管理作業 / 決策支援及報表作業 / 系統維護管理作業
+    role1Permission Int?
+    /// 0x00000000. 資產管理作業 / 租賃管理作業 / 設施設備修繕採購作業 / 會計帳務管理作業 / 事務管理作業 / 決策支援及報表作業 / 系統維護管理作業
+    role2Permission Int?
+
+    /// 真實姓名或法人名稱
+    name String
+    /// Email通知消息時使用
+    email String?
+    /// 其他備註
+    description String?
+
+    /// 是否停用
+    recycled Boolean @default(false)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 系統維護管理作業
+///
+//----------------------------------
+// Logs
+//----------------------------------
+/// 日誌
+/// additional param: context, action, err
+/// userId, auditerId, relatedId
+model Logs {
+    id Int @id @default(autoincrement())
+    level String @db.NVarChar(Max)
+    log String @db.NVarChar(Max)
+    service String @db.VarChar(200)
+    /// 例: ApiLogger
+    context String? @db.VarChar(200)
+    /// 例: POST /auth/login
+    action String? @db.VarChar(200)
+    message String? @db.NVarChar(Max)
+    exception String? @db.NVarChar(Max)
+
+    userId String?
+    auditerId String?
+    relatedId String?
+
+    timestamp DateTime @db.DateTime
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 系統維護管理作業
+///
+//----------------------------------
+// Files
+//----------------------------------
+/// 上傳檔案
+model Files extends Base {
+    fileName String
+    fileSize Int
+    contentType String
+    /// 檔案存放路徑
+    filePath String
+
+    /// 備註
+    description String?
+    /// 是否需要權限存取
+    isPublic Boolean?
+
+    /// 關聯資料，回收處理使用 ///
+    incomeAndExpenseDetailId String?
+    incomeAndExpenseDetail IncomeAndExpenseDetail? @relation(fields: [incomeAndExpenseDetailId], references: [id], onDelete: SetNull)
+    propertyId String?
+    property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+    propertyEquipmentId String?
+    propertyEquipment PropertyEquipment? @relation(fields: [propertyEquipmentId], references: [id], onDelete: SetNull)
+    propertyRentalUnitId String?
+    propertyRentalUnit PropertyRentalUnit? @relation(fields: [propertyRentalUnitId], references: [id], onDelete: SetNull)
+    propertyRentalContractId String?
+    propertyRentalContract PropertyRentalContract? @relation(fields: [propertyRentalContractId], references: [id], onDelete: SetNull)
+    propertyEquipmentMaintanceDetailId String?
+    propertyEquipmentMaintanceDetail PropertyEquipmentMaintanceDetail? @relation(fields: [propertyEquipmentMaintanceDetailId], references: [id], onDelete: SetNull)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 系統維護管理作業
+///
+//----------------------------------
+// 收支項目類別
+//----------------------------------
+/// 收入支出分類
+//
+// 固定收支項目:
+//
+// - 主體: 租戶/出租合約
+//   押金 (單次)
+//   利息稅額 (?)
+//   押金生息 `(0 0 1 * *)`
+//   違約金 (單次)
+//   退還押金 (單次)
+//   租金 `(0 0 1 * *)`
+//
+// - 主體: 資產
+//   資產折舊費 `(0 0 1 * *)`
+//   水費 `(0 0 1 1,3,5,7,9,11 *)(0 0 1 2,4,6,8,10,12 *)`
+//   電費 `(0 0 1 1,3,5,7,9,11 *)(0 0 1 2,4,6,8,10,12 *)`
+//   營業稅 `(0 0 1 * *)`
+//   地價稅 `(0 0 11 * *)`
+//   房屋稅 `(0 0 5 * *)`
+//   管理費 `(0 0 1 * *)`
+//   委託調查研究費 (單次) (Opt)
+//
+// - 主體: 設備
+//   維修費用 (單次)
+//   保養費用 `(0 0 1 * *)`
+//   採購費 (單次) (Optional)
+//
+// - 主體: ?
+//   v設備零件採購費 (單次)
+//
+// 自訂: 外包費用，火險費，公證費，行政規費
+model IncomeAndExpenseCategory extends Base {
+    /// 收入 (Income) 或支出 (Expense)
+    type String
+    /// 收支類別名稱，例如: 電費
+    name String
+    /// 收支類別詳細說明
+    description String?
+    /// 循環週期。格式: Linux Crontab Syntax
+    loopPeriod String?
+
+    /// 是否為出廠預設類別。預設則不可刪除
+    isDefault Boolean @default(false)
+
+    /// 擁有那些主體
+    incomeAndExpenseSubject IncomeAndExpenseSubject[]
+
+    /// 是否回收 (D)
+    recycled Boolean @default(false)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 系統維護管理作業
+///
+//----------------------------------
+// 收支項目主體
+//----------------------------------
+/// 在資產或出租合約中，實際代表可收支項目，可執行的主體
+model IncomeAndExpenseSubject extends Base {
+    /// 關連到哪一個 收支項目類別
+    categoryId String
+    category IncomeAndExpenseCategory @relation(fields: [categoryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 額外詳細說明
+    description String?
+    /// 覆蓋循環週期。格式: Linux Crontab Syntax
+    loopPeriod String?
+    /// 循環年限
+    loopLife Float?
+
+    /// 擁有那些收支明細
+    incomeAndExpenseDetail IncomeAndExpenseDetail[]
+
+    /// 屬於哪個資產
+    propertyId String
+    property Property @relation(fields: [propertyId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 屬於哪個資產出租合約
+    propertyRentalContractId String
+    propertyRentalContract PropertyRentalContract @relation(fields: [propertyRentalContractId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    /// 屬於哪個設備維修請求
+    propertyEquipmentRepairRequestId String
+    propertyEquipmentRepairRequest PropertyEquipmentRepairRequest @relation(fields: [propertyEquipmentRepairRequestId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 系統維護管理作業
+///
+//----------------------------------
+// 收支明細
+//----------------------------------
+/// 代表一期帳單支付，或收入入帳
+model IncomeAndExpenseDetail extends Base {
+    /// 金額。單位: 新台幣
+    amount Int
+    /// 額外詳細說明
+    description String?
+    /// 實際繳納日期
+    executionDate DateTime?
+    /// 單據掃描檔
+    files Files[]
+
+    /// 自動建立後，即進入待處理狀態。直至填寫完畢
+    isPending Boolean
+
+    /// 屬於哪個收支項目主體
+    incomeAndExpenseSubjectId String
+    incomeAndExpenseSubject IncomeAndExpenseSubject @relation(fields: [incomeAndExpenseSubjectId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// 設備定期保養主體
+//----------------------------------
+/// 在設備中，實際代表定期保養項目，可執行的主體
+model PropertyEquipmentMaintanceSubject extends Base {
+    /// 循環週期。格式: Linux Crontab Syntax
+    loopPeriod String?
+    /// 額外保養詳細內容
+    description String?
+
+    /// 擁有哪些保養明細
+    propertyEquipmentMaintanceDetail PropertyEquipmentMaintanceDetail[]
+    /// 屬於哪項設備
+    propertyEquipment PropertyEquipment?
+    /// 屬於哪個維護廠商
+    propertyEquipmentMaintanceVendorId String
+    propertyEquipmentMaintanceVendor PropertyEquipmentMaintanceVendor @relation(fields: [propertyEquipmentMaintanceVendorId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+    @@allow("all", true)
+}
+
+///
+/// @namespace 設施設備修繕採購作業
+///
+//----------------------------------
+// 設備定期保養明細
+//----------------------------------
+/// 代表一期定期保養
+model PropertyEquipmentMaintanceDetail extends Base {
+    /// 額外詳細說明
+    description String?
+    /// 實際執行日期
+    executionDate DateTime?
+    /// 保養紀錄單
+    files Files[]
+
+    /// 自動建立後，即進入待處理狀態。直至填寫完畢
+    isPending Boolean
+
+    /// 屬於哪個設備定期保養主體
+    propertyEquipmentMaintanceSubjectId String
+    propertyEquipmentMaintanceSubject PropertyEquipmentMaintanceSubject @relation(fields: [propertyEquipmentMaintanceSubjectId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+    @@allow("all", true)
+}

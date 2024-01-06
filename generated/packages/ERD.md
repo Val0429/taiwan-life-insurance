@@ -29,11 +29,12 @@ erDiagram
     String level
     String log
     String service
-    String module "nullable"
+    String context "nullable"
+    String action "nullable"
     String message "nullable"
     String exception "nullable"
     String userId "nullable"
-    String tenantId "nullable"
+    String auditerId "nullable"
     String relatedId "nullable"
     DateTime timestamp
 }
@@ -116,17 +117,20 @@ Admin 可以新建/修改/刪除帳號，與提出修改密碼請求
 
 ### `Logs`
 日誌
+additional param: context, action, err
+userId, auditerId, relatedId
 
 **Properties**
   - `id`: 
   - `level`: 
   - `log`: 
   - `service`: 
-  - `module`: 
+  - `context`: 例: ApiLogger
+  - `action`: 例: POST /auth/login
   - `message`: 
   - `exception`: 
   - `userId`: 
-  - `tenantId`: 
+  - `auditerId`: 
   - `relatedId`: 
   - `timestamp`: 
 

@@ -4,7 +4,7 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-12-04 02:10:05
+ * Last Modified: 2023-12-08 01:30:08
  * Modified By: Val Liu
  * -----
  */
@@ -16,8 +16,14 @@ import "core/utilities/load-env";
 const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
     pinoHttp: {
         level: "trace",
-        useLevel: "debug",
+        useLevel: "info",
         timestamp: pino.stdTimeFunctions.isoTime,
+        /// every API actions being logged!
+        customProps: (req) => {
+            const action = `${req.method} ${req.url}`;
+            const userId = (req as any)?.user?.id ?? null;
+            return { context: "ApiLogger", action, userId };
+        },
         transport: {
             targets: [
                 /// log into console
@@ -38,7 +44,7 @@ const pinoSetup: Parameters<typeof LoggerModule.forRoot>[0] = {
                     },
                 },
                 /// log into mssql - only level > warn
-                /// additional param: module, action, err
+                /// additional param: context, action, err
                 /// userId, auditerId, relatedId
                 {
                     target: require.resolve("@valuis0429/pino-mssqlserver"),

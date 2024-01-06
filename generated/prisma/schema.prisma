@@ -58,16 +58,21 @@ model User {
 /// @namespace 系統維護管理作業
 ///
 /// 日誌
+/// additional param: context, action, err
+/// userId, auditerId, relatedId
 model Logs {
   id        Int      @id() @default(autoincrement())
   level     String   @db.NVarChar(Max)
   log       String   @db.NVarChar(Max)
   service   String   @db.VarChar(200)
-  module    String?  @db.VarChar(200)
+  /// 例: ApiLogger
+  context   String?  @db.VarChar(200)
+  /// 例: POST /auth/login
+  action    String?  @db.VarChar(200)
   message   String?  @db.NVarChar(Max)
   exception String?  @db.NVarChar(Max)
   userId    String?
-  tenantId  String?
+  auditerId String?
   relatedId String?
   timestamp DateTime @db.DateTime()
 }

@@ -4,13 +4,13 @@
  * Author: Val Liu <valuis0429@gmail.com>
  *
  * -----
- * Last Modified: 2023-11-28 01:39:32
+ * Last Modified: 2023-12-20 01:09:57
  * Modified By: Val Liu
  * -----
  */
 
 import { PrismaClient } from "@prisma/client";
-import { AESEncrypt } from "./../../../core/utilities/aes-crypto";
+import { AESEncrypt } from "@/../core/utilities/string/aes-crypto";
 
 const prisma = new PrismaClient();
 
