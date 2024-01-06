@@ -10,7 +10,7 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import { AESEncrypt } from "@/../core/utilities/string/aes-crypto";
+import { AESEncrypt } from "@root/core/utilities/string/aes-crypto";
 
 const prisma = new PrismaClient();
 
